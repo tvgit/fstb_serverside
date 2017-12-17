@@ -217,8 +217,8 @@
         console.log("stations.length: ".concat(stations.length));
         console.log("sensors.length: ".concat(sensors.length));
 
-        // var data_grid = new Array();
-        var data_grid = {};
+        var traces = new Array();
+        // var traces = {};
         // Für alle Mess stationen
         //   lege >data_grid< an
         //   für alle Sensoren:
@@ -230,14 +230,13 @@
           }
         }
 
-        console.log("forEach(forEach_xxxx): BEFORE");
         sensors.forEach(show_ele);
         stations.forEach((show_ele));
         // function für >foreach<:
 
         console.log("stations.forEach((fE_make_track)); BEFORE");
-
         stations.forEach((fE_make_track));
+        console.log("stations.forEach((fE_make_track)); AFTER");
         // https://stackoverflow.com/questions/16507222/create-json-object-dynamically-via-javascript-without-concate-strings
         /*
         Die traces zusammenstellen:
@@ -253,83 +252,29 @@
           sensors.forEach(function(sensor) {
             sensor_type = sensor.sensor_type;
             console.log(">>  sensor_type: ".concat(sensor_type));
-            var x, y
-            x = [], y = []
+            var x, y;
+            x = [], y = [];
             console.log(">>  data.length: ".concat(data.length));
             for (var idx = 0; idx < data.length; idx++) {
               row = data[idx];
-              row.forEach(show_ele);
-              // console.log(">>  row: ".concat(row));
               if (row['station_name'] == station_name) {
-                utime = row.unix_time_norm
-                x.push(row.unix_time_norm);
-                val = row.sensor_type
-                y.push(val);
-                console.log("".concat("utime=  ", utime, "; val=  ", val));
-                // console.log(utime.concat(": ", row.sensor_type));
+                x.push(row["unix_time_norm"]);
+                y.push(row[sensor_type]); // MUSS in [] geschrieben werden, da VARIABLE. (darf nicht in .-Notation stehen)
+                // console.log("".concat("sensor_type= ", sensor_type, ";  utime=  ", row["unix_time_norm"], ";  val=  ", row[sensor_type]));
               }
+              var trace = {
+                station: station_name,
+                sensor: sensor_type,
+                x: x,
+                y: y,
+              }
+              traces.push(trace);
             }
-
-//            x = new Array();
-//            y = new Array();
           });
-
-
-
-          station_name = station.station_name;
-          console.log("".concat("station_name=  ", station.station_name));
-          typeof_data_grid_station_name = typeof data_grid.station_name;
-          console.log("typeof_data_grid.station_name: ".concat(typeof_data_grid_station_name));
-          if (typeof data_grid.station_name == 'undefined') {
-            console.log(">   data_grid.station_name: ".concat(data_grid.station_name));
-            // data_grid.station_name = new Array();
-            data_grid.station_name = station_name;
-            console.log(">   data_grid.station_name: ".concat(data_grid.station_name));
-            sensors.forEach(function(sensor) {
-              sensor_type = sensor.sensor_type;
-              console.log(">>  sensor.sensor_type: ".concat(sensor.sensor_type));
-              console.log(">>  sensor_type: ".concat(sensor_type));
-              if (typeof data_grid.station_name.sensor_type == 'undefined') {
-                console.log(">  data_grid.station_name.sensor_type: ".concat(data_grid.station_name.sensor_type));
-                // data_grid.station_name.sensor_type = new Array();
-                data_grid.station_name.sensor_type = {};
-                data_grid.station_name.sensor_type = sensor_type;
-                console.log(">  data_grid.station_name.sensor_type: ".concat(data_grid.station_name.sensor_type));
-                //                data_grid.station_name.sensor_type.x = new Array();
-                //                data_grid.station_name.sensor_type.y = new Array();
-              };
-            });
-          };
         }
       }
       /*
-              console.log("stations.forEach((fE_make_track)); AFTER");
-              console.log("forEach(forEach_xxxx): AFTER");
-
-              console.log("processData_from_array: vor >var traces = [];<");
-
-              var traces = [];
-              for (idx = 0; idx < data.length; ++idx) {
-                // console.log(data[idx]);
-                val = data[idx];
-                console.log(idx, val)
-                var trace = {
-                  sensor_type: val["sensor_type"],
-                  station_name: val["station_name"],
-                  x: val["unix_time_norm"],
-                  y: val["value"],
-                };
-                console.log("trace: ")
-                console.log(trace)
-
-                sensor_type = val["sensor_type"];
-                station_name = val["station_name"];
-                data_grid.station_name.sensor_type.x.push(val["unix_time_norm"]);
-                data_grid.station_name.sensor_type.y.push(val["value"]);
-
-              };
               // console.log(traces);
-              /*
               var layout = {
                 barmode: 'group'
                 };
