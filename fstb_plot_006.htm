@@ -11,9 +11,9 @@
   echo "<p/>station_name: ";
   print_r($_POST['station_name'] );
   echo "<p/>";
-  $_station_name = $_POST['station_name'] ; 
+  $_station_name = $_POST['station_name'] ;
   // echo "<b>" . $_station_name . "</b>";
-  
+
 
   $_intervall = $_POST['Intervall'] ;
   echo "<b> Intervall: " . $_intervall . "</b><p/>";
@@ -22,97 +22,100 @@
 
   $_station_name = $_POST['station_name'];
     if(empty($_station_name)) {
-		//  echo("Keine Mess-Station ausgewählt. Bitte Checkbox ankreuzen!");
-		}
+    //  echo("Keine Mess-Station ausgewählt. Bitte Checkbox ankreuzen!");
+    }
     else {
-		$N = count($_station_name);
-		for($i=0; $i < $N; $i++) {
-			//  echo("<br>" . "&emsp;&emsp;" . $_station_name[$i] );
-			}	
-		}
+    $N = count($_station_name);
+    for($i=0; $i < $N; $i++) {
+      //  echo("<br>" . "&emsp;&emsp;" . $_station_name[$i] );
+      }
+    }
 
   $db = new SQLite3("feinstaub_0011_NORM.db");
   $N = count($_station_name);
   $_cnt = 0 ;
   // Fuer Datumsberechnung braucht man die >PHP DateInterval Class<
   // https://www.webpagefx.com/blog/web-design/php-dateinterval-class/
-  // values: unix_time_norm, datum, zeit, station_idx, station_name, sensor_idx, sensor_type, value, line_number   
+  // values: unix_time_norm, datum, zeit, station_idx, station_name, sensor_idx, sensor_type, value, line_number
 
   for($i=0; $i < $N; $i++){
-	// Für den Titel der Graphik: finde Anfang ($_t_start) und Ende ($_datum)des Intervalls:
+  // Für den Titel der Graphik: finde Anfang ($_t_start) und Ende ($_datum)des Intervalls:
     $_qu_str_values = "SELECT * FROM fstb_pivot WHERE station_name = '$_station_name[$i]' AND ";
 
     if ($_intervall == '0'){
-		// $_qu_str_values = $_qu_str_values . "datum = '$_datum' ORDER BY unix_time_norm" ;
-		$_qu_str_values = $_qu_str_values . "date( datum ) = date( '$_datum') ORDER BY unix_time_norm" ;
-		$_t_start = $_datum ; // Intervallanfang == Intervallende; >$_t_start< für Graphiktitel
-		}
+    // $_qu_str_values = $_qu_str_values . "datum = '$_datum' ORDER BY unix_time_norm" ;
+    $_qu_str_values = $_qu_str_values . "date( datum ) = date( '$_datum') ORDER BY unix_time_norm" ;
+    $_t_start = $_datum ; // Intervallanfang == Intervallende; >$_t_start< für Graphiktitel
+    }
 
     if ($_intervall == '7'){
-		$_qu_str_values = $_qu_str_values . "date(datum) >= date( '$_datum', '-7 day' ) AND date(datum) <= date( '$_datum') ORDER BY unix_time_norm" ;
+    $_qu_str_values = $_qu_str_values . "date(datum) >= date( '$_datum', '-7 day' ) AND date(datum) <= date( '$_datum') ORDER BY unix_time_norm" ;
 
-		$_res = $db->query( "SELECT date( '$_datum', '-7 day' );" );
-		if ($_res){
-			$_t_tmp   = $_res -> fetchArray(SQLITE3_ASSOC) ;
-			// dieses seltsame Konstrukt (>reset()<) dient dazu, das erste Element eines arrays auszulesen:
-			$_t_start = reset($_t_tmp); // >$_t_start< für Graphiktitel
-			}
-		}
-    
+    $_res = $db->query( "SELECT date( '$_datum', '-7 day' );" );
+    if ($_res){
+      $_t_tmp   = $_res -> fetchArray(SQLITE3_ASSOC) ;
+      // dieses seltsame Konstrukt (>reset()<) dient dazu, das erste Element eines arrays auszulesen:
+      $_t_start = reset($_t_tmp); // >$_t_start< für Graphiktitel
+      }
+    }
+
     if ($_intervall == '31'){
-		$_qu_str_values = $_qu_str_values . "date(datum) >= date( '$_datum', '-1 month' ) AND date(datum) <= date( '$_datum') ORDER BY unix_time_norm" ;
+    $_qu_str_values = $_qu_str_values . "date(datum) >= date( '$_datum', '-1 month' ) AND date(datum) <= date( '$_datum') ORDER BY unix_time_norm" ;
 
-		$_res = $db->query( "SELECT date( '$_datum', '-1 month' );" );
-		if ($_res){
-			$_t_tmp   = $_res -> fetchArray(SQLITE3_ASSOC) ;
-			// dieses seltsame Konstrukt (>reset()<) dient dazu, das erste Element eines arrays auszulesen:
-			$_t_start = reset($_t_tmp);  // >$_t_start< für Graphiktitel
-			}
-		}
+    $_res = $db->query( "SELECT date( '$_datum', '-1 month' );" );
+    if ($_res){
+      $_t_tmp   = $_res -> fetchArray(SQLITE3_ASSOC) ;
+      // dieses seltsame Konstrukt (>reset()<) dient dazu, das erste Element eines arrays auszulesen:
+      $_t_start = reset($_t_tmp);  // >$_t_start< für Graphiktitel
+      }
+    }
 
     echo '<pre> SQL-query-string: '; print $_qu_str_values ; echo '</pre>';
 
     // !! Mit >$_data< werden die Daten aus der db an das plotly script übergeben !!!
     $_res = $db->query($_qu_str_values);
     if ($_res){
-		while ($_item = $_res -> fetchArray(SQLITE3_ASSOC)) {
-			$_data[$_cnt] = $_item ;
-			// echo '<pre>'; print $_cnt . '  ' ; print_r ($_item) ; echo '</pre>';
-			$_cnt = $_cnt + 1;
-			}
-		}
+    while ($_item = $_res -> fetchArray(SQLITE3_ASSOC)) {
+      $_data[$_cnt] = $_item ;
+      // echo '<pre>'; print $_cnt . '  ' ; print_r ($_item) ; echo '</pre>';
+      $_cnt = $_cnt + 1;
+      }
+    }
 
     // !! Mit >$_datum_start< und >$_datum_ende< werden Start- und Ende-Datum an das plotly script übergeben !
     $_datum_ende  = $_datum ;
     $_datum_start = $_t_start ;
     echo '<pre>'; print $_datum_ende  ; echo '</pre>';
     echo '<pre>'; print $_datum_start ; echo '</pre>';
-	}
-	
+  }
+
 
     // !! Mit >$_sensors< werden die Daten aus der db an das plotly script übergeben !!!
     $_qu_str_sensor_type = "SELECT sensor_type FROM sensors";
     echo '<pre>'; print $_qu_str_sensor_type ; echo '</pre>';
     $_res = $db->query($_qu_str_sensor_type);
+    $_cnt = 0 ;
     if ($_res){
-		while ($_item = $_res -> fetchArray(SQLITE3_ASSOC)) {
-			$_sensors[$_cnt] = $_item ;
-			// echo '<pre>'; print $_cnt . '  ' ; print_r ($_item) ; echo '</pre>';
-			$_cnt = $_cnt + 1;
-			}
-		}
+    while ($_item = $_res -> fetchArray(SQLITE3_ASSOC)) {
+      $_sensors[$_cnt] = $_item ;
+      echo '<pre>'; print $_cnt . '  ' ; print_r ($_item) ; echo '</pre>';
+      $_cnt = $_cnt + 1;
+      }
+    }
 
     // !! Mit >$_stations< werden die Daten aus der db an das plotly script übergeben !!!
     $_qu_str_station_name = "SELECT station_name FROM stations";
     echo '<pre>'; print $_qu_str_station_name ; echo '</pre>';
     $_res = $db->query($_qu_str_station_name);
+    $_cnt = 0 ;
     if ($_res){
-		while ($_item = $_res -> fetchArray(SQLITE3_ASSOC)) {
-			$_stations[$_cnt] = $_item ;
-			// echo '<pre>'; print $_cnt . '  ' ; print_r ($_item) ; echo '</pre>';
-			$_cnt = $_cnt + 1;
-			}
-		}
+    // while ($_item = $_res -> fetchArray(SQLITE3_ASSOC)) {
+    while ($_item = $_res -> fetchArray(SQLITE3_ASSOC)) {
+      $_stations[$_cnt] = $_item;
+      echo '<pre>'; print $_cnt . '  ' ; print_r ($_stations[$_cnt]) ; echo '</pre>';
+      $_cnt = $_cnt + 1;
+      }
+    }
 
   /*
   CREATE TABLE fstb (
@@ -147,306 +150,258 @@
   */
 ?>
 
-<head>
-  <!-- Plotly.js -->
-   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
+  <head>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  </head>
 
-<body>
-  <div id="myDiv" style="width: 480px; height: 400px;"><!-- Plotly chart will be drawn inside this DIV --></div>
-  <script>
-
-	function makeplot_from_csv() {
-		// Plotly.d3.csv("https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv", function(data){ processData(data) } );};
-		Plotly.d3.csv('http://192.168.2.104/feinstaublog/20170626_test.csv', function(csv_data){
-        processData_from_csv(csv_data) } );
-		};
-
-
-	function make_trace (x, y, station_name, messwert, farbe){
-		trace = {
-  			x, y,
-  			line: {
-  				color: farbe,
-				// shape: 'spline',
-				shape: 'linear',
-  				width: 0.5 },
-				mode: 'lines',
-				connectgaps: false,
-				name: station_name + ': ' + messwert
-				}
-  		return trace
-		};
+  <body>
+    <div id="myDiv" style="width: 480px; height: 400px;">
+      <!-- Plotly chart will be drawn inside this DIV -->
+    </div>
+    <script>
+      function makeplot_from_csv() {
+        // Plotly.d3.csv("https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv", function(data){ processData(data) } );};
+        Plotly.d3.csv('http://192.168.2.104/feinstaublog/20170626_test.csv', function(csv_data) {
+          processData_from_csv(csv_data)
+        });
+      };
 
 
-	function make_trace_from_csv (data_csv, station_name, messwert, farbe){
-		var x, y
-		x = [], y = []
-		for (var i=0; i<data_csv.length; i++) {
-			row = data_csv[i];
-			if (row['station_name'] == station_name) {
-				x.push( row['datum'] );
-				y.push( row[messwert] );
-				}
-			}
-		// console.log('datum', x, messwert, y);
-		return make_trace (x, y, station_name, messwert, farbe)
-		};
-
-	function processData_from_csv(data) {
-		trace_01 = make_trace_from_csv (data, '2326588', 'SDS_P1', 'rgb(66, 127, 14)')
-		trace_02 = make_trace_from_csv (data, '2326588', 'SDS_P2', 'rgb(0,100,0)')
-		trace_03 = make_trace_from_csv (data, '3912953', 'SDS_P1', 'rgb(30,144,255)')
-		trace_04 = make_trace_from_csv (data, '3912953', 'SDS_P2', 'blue')
-		var data = [ trace_01, trace_02, trace_03, trace_04];
-		makePlotly( data );
-    };
-
-    function make_trace_from_array_ORG (data, station_name, messwert, farbe){
-  		var x, y
-  		x = [], y = []
-  		for (var i=0; i<data.length; i++) {
-  			row = data[i];
-  			if (row['station_name'] == station_name) {
-  				x.push( row['datum'] );
-  				y.push( row[messwert] );
-  				}
-  			}
-  		console.log('datum', x, messwert, y);
-  		return make_trace (x, y, station_name, messwert, farbe)
-    };
-
-	function processData_from_array_ORG_01(data, datum_intervall) {
-		trace_01 = make_trace_from_array_ORG (data, '2326588', 'SDS_P1', 'rgb(66, 127, 14)')
-		trace_02 = make_trace_from_array_ORG (data, '2326588', 'SDS_P2', 'rgb(0,100,0)')
-		trace_03 = make_trace_from_array_ORG (data, '3912953', 'SDS_P1', 'rgb(30,144,255)')
-		trace_04 = make_trace_from_array_ORG (data, '3912953', 'SDS_P2', 'blue')
-		var data = [ trace_01, trace_02, trace_03, trace_04];
-		makePlotly( data, datum_intervall );
-    };
-
-    function make_trace_from_array (data, station_name, messwert, farbe){
-  		var x, y
-  		x = [], y = []
-  		for (var i=0; i<data.length; i++) {
-  			row = data[i];
-  			if (row['station_name'] == station_name) {
-  				x.push( row['datum'] );
-  				y.push( row[messwert] );
-  				}
-  			}
-  		console.log('datum', x, messwert, y);
-  		return make_trace (x, y, station_name, messwert, farbe)
-    };
-    
-    
-	// https://stackoverflow.com/questions/966225/how-can-i-create-a-two-dimensional-array-in-javascript
-	function processData_from_array_ORG_02(stations, sensors, data, datum_intervall) {
-        console.log("processData_from_array: BEGIN")
-		var data_grid = new Array();
-		console.log(stations)
-		console.log(sensors)
-
-		for (ix = 0; ix < stations.length; ++ix) {
-			station_name = stations[ix]
-			console.log(station_name)
-			if (typeof data_grid[station_name] !== 'undefined') {
-				data_grid[station_name] = new Array();
-				data_grid[station_name] = station_name ;
-				for (idx = 0; idx < sensors.length; ++idx) {
-					sensor_type = sensors[idx]
-					console.log(sensor_type)
-					if (typeof data_grid[station_name][sensor_type] !== 'undefined') {
-						data_grid[station_name][sensor_type] = new Array();
-						data_grid[station_name][sensor_type] = sensor_type;
-						data_grid[station_name][sensor_type]['x'] = new Array();
-						data_grid[station_name][sensor_type]['y'] = new Array();
-						}
-					}
-				}
-			}
-		// console.log("data_grid = ")
-		// console.log(data_grid)
-		// console.log("processData_from_array: vor >var traces = [];<")
-		
-		var traces = [];
-		for (idx = 0; idx < data.length; ++idx) {
-			// console.log(data[idx]);
-			val = data[idx] ;
-			console.log(idx, val)   
-			var trace = {
-				sensor_type : val["sensor_type"] ,
-				station_name: val["station_name"] ,
-				x           : val["unix_time_norm"],
-				y           : val["value"],
-				};
-			console.log("trace: ")   
-			console.log(trace)   
-			
-			sensor_type  = val["sensor_type"] ;
-			station_name = val["station_name"] ;
-			data_grid[station_name][sensor_type]['x'].push(val["unix_time_norm"]) ;
-			data_grid[station_name][sensor_type]['y'].push(val["value"]) ;
-
-			// x.push(val["unix_time_norm"]);
-			// y.push(val["value"]);
-
-			// traces.push(trace);
-			};
-		// console.log(traces);
-		/*
-		var layout = {
-			barmode: 'group'
-			};
-
-		Plotly.newPlot('tester', traces, layout);
-		trace_01 = make_trace_from_array_ORG (data, '2326588', 'SDS_P1', 'rgb(66, 127, 14)')
-		trace_02 = make_trace_from_array_ORG (data, '2326588', 'SDS_P2', 'rgb(0,100,0)')
-		trace_03 = make_trace_from_array_ORG (data, '3912953', 'SDS_P1', 'rgb(30,144,255)')
-		trace_04 = make_trace_from_array_ORG (data, '3912953', 'SDS_P2', 'blue')
-		var data = [ trace_01, trace_02, trace_03, trace_04];
-		makePlotly( data, datum_intervall ); 
-		*/
-        console.log("processData_from_array: BEGIN")
-
-		};
-
-    
+      function make_trace(x, y, station_name, messwert, farbe) {
+        trace = {
+          x,
+          y,
+          line: {
+            color: farbe,
+            // shape: 'spline',
+            shape: 'linear',
+            width: 0.5
+          },
+          mode: 'lines',
+          connectgaps: false,
+          name: station_name + ': ' + messwert
+        }
+        return trace
+      };
 
 
-	// https://stackoverflow.com/questions/966225/how-can-i-create-a-two-dimensional-array-in-javascript
-	function processData_from_array(stations, sensors, data, datum_intervall) {
+      function make_trace_from_csv(data_csv, station_name, messwert, farbe) {
+        var x, y
+        x = [], y = []
+        for (var i = 0; i < data_csv.length; i++) {
+          row = data_csv[i];
+          if (row['station_name'] == station_name) {
+            x.push(row['datum']);
+            y.push(row[messwert]);
+          }
+        }
+        // console.log('datum', x, messwert, y);
+        return make_trace(x, y, station_name, messwert, farbe)
+      };
+
+      function processData_from_csv(data) {
+        trace_01 = make_trace_from_csv(data, '2326588', 'SDS_P1', 'rgb(66, 127, 14)')
+        trace_02 = make_trace_from_csv(data, '2326588', 'SDS_P2', 'rgb(0,100,0)')
+        trace_03 = make_trace_from_csv(data, '3912953', 'SDS_P1', 'rgb(30,144,255)')
+        trace_04 = make_trace_from_csv(data, '3912953', 'SDS_P2', 'blue')
+        var data = [trace_01, trace_02, trace_03, trace_04];
+        makePlotly(data);
+      };
+
+
+      // https://stackoverflow.com/questions/966225/how-can-i-create-a-two-dimensional-array-in-javascript
+
+      function processData_from_array(stations, sensors, data, datum_intervall) {
         console.log("processData_from_array: BEGIN");
-		var data_grid = new Array();
-		console.log(stations);
-		console.log(sensors);
-      
-        // Für alle Mess stationen 
+        console.log("stations.length: ".concat(stations.length));
+        console.log("sensors.length: ".concat(sensors.length));
+
+        // var data_grid = new Array();
+        var data_grid = {};
+        // Für alle Mess stationen
         //   lege >data_grid< an
         //   für alle Sensoren:
-        //       
-        console.log("stations.length: ");
-        console.log(stations.length);
-		for (ix = 0; ix < stations.length; ++ix) {
-			station_name = stations[ix];
-			console.log("station_name: ");
-			console.log(station_name);
-			if (typeof data_grid[station_name] !== 'undefined') {
-                console.log("station_name] !== 'undefined'")
-				data_grid[station_name] = new Array();
-				data_grid[station_name] = station_name ;
-				for (idx = 0; idx < sensors.length; ++idx) {
-					sensor_type = sensors[idx]
-					console.log("sensor_type: ")
-					console.log(sensor_type)
-					if (typeof data_grid[station_name][sensor_type] !== 'undefined') {
-						data_grid[station_name][sensor_type] = new Array();
-						data_grid[station_name][sensor_type] = sensor_type;
-						data_grid[station_name][sensor_type]['x'] = new Array();
-						data_grid[station_name][sensor_type]['y'] = new Array();
-						}
-					}
-				}
-			}
-		// console.log("data_grid = ")
-		// console.log(data_grid)
-		console.log("processData_from_array: vor >var traces = [];<");
-		
-		var traces = [];
-		for (idx = 0; idx < data.length; ++idx) {
-			// console.log(data[idx]);
-			val = data[idx] ;
-			console.log(idx, val)   
-			var trace = {
-				sensor_type : val["sensor_type"] ,
-				station_name: val["station_name"] ,
-				x           : val["unix_time_norm"],
-				y           : val["value"],
-				};
-			console.log("trace: ")   
-			console.log(trace)   
-			
-			sensor_type  = val["sensor_type"] ;
-			station_name = val["station_name"] ;
-			data_grid[station_name][sensor_type]['x'].push(val["unix_time_norm"]) ;
-			data_grid[station_name][sensor_type]['y'].push(val["value"]) ;
-
-			// x.push(val["unix_time_norm"]);
-			// y.push(val["value"]);
-
-			// traces.push(trace);
-			};
-		// console.log(traces);
-		/*
-		var layout = {
-			barmode: 'group'
-			};
-
-		Plotly.newPlot('tester', traces, layout);
-		trace_01 = make_trace_from_array_ORG (data, '2326588', 'SDS_P1', 'rgb(66, 127, 14)')
-		trace_02 = make_trace_from_array_ORG (data, '2326588', 'SDS_P2', 'rgb(0,100,0)')
-		trace_03 = make_trace_from_array_ORG (data, '3912953', 'SDS_P1', 'rgb(30,144,255)')
-		trace_04 = make_trace_from_array_ORG (data, '3912953', 'SDS_P2', 'blue')
-		var data = [ trace_01, trace_02, trace_03, trace_04];
-		makePlotly( data, datum_intervall ); 
-		*/
-        console.log("processData_from_array: BEGIN")
-
-		};
-
-	function makePlotly( data, datum_intervall ){
-		var plotDiv = document.getElementById("plot");
-		// https://plot.ly/create/?fid=Will_Manns:36 : JSON > object > layout
-		var layout = {
-				autosize: false,
-				width:  1000,
-				height:  500,
-				title: 'Feinstaub: ' + datum_intervall ,
-				yaxis: {range: [0, 80]},
-				xaxis: {
-					title	:	"X-Achse" ,
-					tickfont : {size: 8},
-					//tickformat:	"%a %Y-%m-%d %H-%M-%S",
-					tickformat:	"%a %m-%d %H-%M",
-					},
-			// https://community.plot.ly/t/set-range-on-xaxis-with-dates/1040/2
-			//			xaxis: {range: [2, 5]}
-		};
-
-		Plotly.newPlot('myDiv', data, layout)
-		};
 
 
-  // *****************************************
-  // ************ main program: **************
-  // *****************************************
-    
-  console.log('Anfang ');
+        function show_ele(json, index) {
+          for (var key in json) {
+            console.log(key.concat(": ", json[key]));
+          }
+        }
 
-  // Fetch SQL-query via php - var: >($_qu_str_values<
-  // var qu_str_values = <?php echo json_encode($_qu_str_values, JSON_PRETTY_PRINT) ?>;
-  // Fetch stations from database via php - var: >$_stations<
-  var stations = <?php echo json_encode($_stations, JSON_PRETTY_PRINT) ?>;
-  // Fetch sensors from database via php - var: >$_sensors<
-  var sensors = <?php echo json_encode($_sensors, JSON_PRETTY_PRINT) ?>;
-  // Fetch values from database via php - var: >$_data<
-  var data = <?php echo json_encode($_data, JSON_PRETTY_PRINT) ?>;
-  var last_ele = data[data.length - 1];
-  var datum_ende  = <?php echo json_encode($_datum_ende, JSON_PRETTY_PRINT) ?>;
-  var datum_start = <?php echo json_encode($_datum_start, JSON_PRETTY_PRINT) ?>;
-  if (datum_start == datum_ende) {
-	datum_intervall = datum_start ;
-    }
-  else {
-    datum_intervall = datum_start  + ' - ' + datum_ende  ;
-    }
+        console.log("forEach(forEach_xxxx): BEFORE");
+        sensors.forEach(show_ele);
+        stations.forEach((show_ele));
+        // function für >foreach<:
 
-  //makeplot_from_csv(); // Plotly.d3.csv( ... ) -> processData_from_csv(...) -> makePlotly( ... )
+        console.log("stations.forEach((fE_make_track)); BEFORE");
 
-  processData_from_array(stations, sensors, data, datum_intervall) ;
-  // Plotly.d3.csv( ... )  # fetches data
-  // processData(...)      # reformats data in appropriate data structure
-  // makePlotly( ... )     # makes grph in ELement "plot"
+        stations.forEach((fE_make_track));
+        // https://stackoverflow.com/questions/16507222/create-json-object-dynamically-via-javascript-without-concate-strings
+        /*
+        Die traces zusammenstellen:
+        Name der Mess-Station
+        Name des Sensors
+        x == array von utime
+        y == array der Messwerte
+        */
+        function fE_make_track(station, index) {
+          station_name = station.station_name;
+          console.log("".concat("station_name=  ", station.station_name));
 
-  </script>
-</body>
+          sensors.forEach(function(sensor) {
+            sensor_type = sensor.sensor_type;
+            console.log(">>  sensor_type: ".concat(sensor_type));
+            var x, y
+            x = [], y = []
+            console.log(">>  data.length: ".concat(data.length));
+            for (var idx = 0; idx < data.length; idx++) {
+              row = data[idx];
+              row.forEach(show_ele);
+              // console.log(">>  row: ".concat(row));
+              if (row['station_name'] == station_name) {
+                utime = row.unix_time_norm
+                x.push(row.unix_time_norm);
+                val = row.sensor_type
+                y.push(val);
+                console.log("".concat("utime=  ", utime, "; val=  ", val));
+                // console.log(utime.concat(": ", row.sensor_type));
+              }
+            }
+
+//            x = new Array();
+//            y = new Array();
+          });
+
+
+
+          station_name = station.station_name;
+          console.log("".concat("station_name=  ", station.station_name));
+          typeof_data_grid_station_name = typeof data_grid.station_name;
+          console.log("typeof_data_grid.station_name: ".concat(typeof_data_grid_station_name));
+          if (typeof data_grid.station_name == 'undefined') {
+            console.log(">   data_grid.station_name: ".concat(data_grid.station_name));
+            // data_grid.station_name = new Array();
+            data_grid.station_name = station_name;
+            console.log(">   data_grid.station_name: ".concat(data_grid.station_name));
+            sensors.forEach(function(sensor) {
+              sensor_type = sensor.sensor_type;
+              console.log(">>  sensor.sensor_type: ".concat(sensor.sensor_type));
+              console.log(">>  sensor_type: ".concat(sensor_type));
+              if (typeof data_grid.station_name.sensor_type == 'undefined') {
+                console.log(">  data_grid.station_name.sensor_type: ".concat(data_grid.station_name.sensor_type));
+                // data_grid.station_name.sensor_type = new Array();
+                data_grid.station_name.sensor_type = {};
+                data_grid.station_name.sensor_type = sensor_type;
+                console.log(">  data_grid.station_name.sensor_type: ".concat(data_grid.station_name.sensor_type));
+                //                data_grid.station_name.sensor_type.x = new Array();
+                //                data_grid.station_name.sensor_type.y = new Array();
+              };
+            });
+          };
+        }
+      }
+      /*
+              console.log("stations.forEach((fE_make_track)); AFTER");
+              console.log("forEach(forEach_xxxx): AFTER");
+
+              console.log("processData_from_array: vor >var traces = [];<");
+
+              var traces = [];
+              for (idx = 0; idx < data.length; ++idx) {
+                // console.log(data[idx]);
+                val = data[idx];
+                console.log(idx, val)
+                var trace = {
+                  sensor_type: val["sensor_type"],
+                  station_name: val["station_name"],
+                  x: val["unix_time_norm"],
+                  y: val["value"],
+                };
+                console.log("trace: ")
+                console.log(trace)
+
+                sensor_type = val["sensor_type"];
+                station_name = val["station_name"];
+                data_grid.station_name.sensor_type.x.push(val["unix_time_norm"]);
+                data_grid.station_name.sensor_type.y.push(val["value"]);
+
+              };
+              // console.log(traces);
+              /*
+              var layout = {
+                barmode: 'group'
+                };
+
+              Plotly.newPlot('tester', traces, layout);
+              trace_01 = make_trace_from_array_ORG (data, '2326588', 'SDS_P1', 'rgb(66, 127, 14)')
+              trace_02 = make_trace_from_array_ORG (data, '2326588', 'SDS_P2', 'rgb(0,100,0)')
+              trace_03 = make_trace_from_array_ORG (data, '3912953', 'SDS_P1', 'rgb(30,144,255)')
+              trace_04 = make_trace_from_array_ORG (data, '3912953', 'SDS_P2', 'blue')
+              var data = [ trace_01, trace_02, trace_03, trace_04];
+              makePlotly( data, datum_intervall );
+              */
+      /*
+          console.log("processData_from_array: END")
+        };
+*/
+      function makePlotly(data, datum_intervall) {
+        var plotDiv = document.getElementById("plot");
+        // https://plot.ly/create/?fid=Will_Manns:36 : JSON > object > layout
+        var layout = {
+          autosize: false,
+          width: 1000,
+          height: 500,
+          title: 'Feinstaub: ' + datum_intervall,
+          yaxis: {
+            range: [0, 80]
+          },
+          xaxis: {
+            title: "X-Achse",
+            tickfont: {
+              size: 8
+            },
+            //tickformat:	"%a %Y-%m-%d %H-%M-%S",
+            tickformat: "%a %m-%d %H-%M",
+          },
+          // https://community.plot.ly/t/set-range-on-xaxis-with-dates/1040/2
+          //			xaxis: {range: [2, 5]}
+        };
+
+        Plotly.newPlot('myDiv', data, layout)
+      };
+
+
+      // *****************************************
+      // ************ main program: **************
+      // *****************************************
+
+      console.log('Anfang ');
+
+      // Fetch SQL-query via php - var: >($_qu_str_values<
+      // var qu_str_values = <?php echo json_encode($_qu_str_values, JSON_PRETTY_PRINT) ?>;
+      // Fetch stations from database via php - var: >$_stations<
+      var stations = <?php echo json_encode($_stations, JSON_PRETTY_PRINT) ?>;
+      // Fetch sensors from database via php - var: >$_sensors<
+      var sensors = <?php echo json_encode($_sensors, JSON_PRETTY_PRINT) ?>;
+      // Fetch values from database via php - var: >$_data<
+      var data = <?php echo json_encode($_data, JSON_PRETTY_PRINT) ?>;
+      var last_ele = data[data.length - 1];
+      var datum_ende = <?php echo json_encode($_datum_ende, JSON_PRETTY_PRINT) ?>;
+      var datum_start = <?php echo json_encode($_datum_start, JSON_PRETTY_PRINT) ?>;
+      if (datum_start == datum_ende) {
+        datum_intervall = datum_start;
+      } else {
+        datum_intervall = datum_start + ' - ' + datum_ende;
+      }
+
+      //makeplot_from_csv(); // Plotly.d3.csv( ... ) -> processData_from_csv(...) -> makePlotly( ... )
+
+      processData_from_array(stations, sensors, data, datum_intervall);
+      // Plotly.d3.csv( ... )  # fetches data
+      // processData(...)      # reformats data in appropriate data structure
+      // makePlotly( ... )     # makes grph in ELement "plot"
+
+    </script>
+  </body>
