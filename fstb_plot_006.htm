@@ -160,6 +160,7 @@
       <!-- Plotly chart will be drawn inside this DIV -->
     </div>
     <script>
+
       function makeplot_from_csv() {
         // Plotly.d3.csv("https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv", function(data){ processData(data) } );};
         Plotly.d3.csv('http://192.168.2.104/feinstaublog/20170626_test.csv', function(csv_data) {
@@ -168,7 +169,7 @@
       };
 
 
-      function make_trace(x, y, station_name, messwert, farbe) {
+      function make_trace(x, y, station_name, sensor_type, farbe) {
         trace = {
           x,
           y,
@@ -180,24 +181,24 @@
           },
           mode: 'lines',
           connectgaps: false,
-          name: station_name + ': ' + messwert
+          name: station_name + ': ' + sensor_type
         }
         return trace
       };
 
 
-      function make_trace_from_csv(data_csv, station_name, messwert, farbe) {
+      function make_trace_from_csv(data_csv, station_name, sensor_type, farbe) {
         var x, y
         x = [], y = []
         for (var i = 0; i < data_csv.length; i++) {
           row = data_csv[i];
           if (row['station_name'] == station_name) {
             x.push(row['datum']);
-            y.push(row[messwert]);
+            y.push(row[sensor_type]);
           }
         }
-        // console.log('datum', x, messwert, y);
-        return make_trace(x, y, station_name, messwert, farbe)
+        // console.log('datum', x, sensor_type, y);
+        return make_trace(x, y, station_name, sensor_type, farbe)
       };
 
       function processData_from_csv(data) {
@@ -217,7 +218,14 @@
         console.log("stations.length: ".concat(stations.length));
         console.log("sensors.length: ".concat(sensors.length));
 
+        // http://colorsupplyyy.com/app/
+        colors_triad = ["#F0A32F", "#367ABD", "#844D9E" ] ;
+        // https://plot.ly/python/reference/   search for 'dash':
+        // ... or a dash length list in px (eg "5px,10px,2px,2px"). 
+        dash_style = ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"] ;
+      
         var traces = new Array();
+        var old_station_name = ''
         // var traces = {};
         // Für alle Mess stationen
         //   lege >data_grid< an
@@ -236,7 +244,6 @@
 
         console.log("stations.forEach((fE_make_track)); BEFORE");
         stations.forEach((fE_make_track));
-        console.log("stations.forEach((fE_make_track)); AFTER");
         // https://stackoverflow.com/questions/16507222/create-json-object-dynamically-via-javascript-without-concate-strings
         /*
         Die traces zusammenstellen:
@@ -246,31 +253,44 @@
         y == array der Messwerte
         */
         function fE_make_track(station, index) {
-          station_name = station.station_name;
+          var station_name = station.station_name;
           console.log("".concat("station_name=  ", station.station_name));
-
           sensors.forEach(function(sensor) {
-            sensor_type = sensor.sensor_type;
+            var sensor_type = sensor.sensor_type;
             console.log(">>  sensor_type: ".concat(sensor_type));
             var x, y;
             x = [], y = [];
             console.log(">>  data.length: ".concat(data.length));
             for (var idx = 0; idx < data.length; idx++) {
-              row = data[idx];
+              var row = data[idx];
               if (row['station_name'] == station_name) {
                 x.push(row["unix_time_norm"]);
-                y.push(row[sensor_type]); // MUSS in [] geschrieben werden, da VARIABLE. (darf nicht in .-Notation stehen)
+                y.push(row[sensor_type]); // !!! MUSS in [] geschrieben werden, da VARIABLE. (darf nicht in .-Notation stehen) !!!!
                 // console.log("".concat("sensor_type= ", sensor_type, ";  utime=  ", row["unix_time_norm"], ";  val=  ", row[sensor_type]));
               }
-              var trace = {
-                station: station_name,
-                sensor: sensor_type,
-                x: x,
-                y: y,
-              }
-              traces.push(trace);
             }
+            var trace = {
+              station_name: station_name,
+              sensor_type : sensor_type,
+              x: x,
+              y: y,
+            }
+            traces.push(trace);
+//            console.log("".concat("x:  ", trace.x) )
+//            console.log("".concat("y:  ", trace.y) )
           });
+        }
+        
+        
+        console.log(">>  traces.length: ".concat(traces.length));
+        for (var idx = 0; idx < traces.length; idx++) {
+          trace = traces[idx]
+          console.log(">>  idx: ".concat(idx, ";  traces[idx]['station_name']:", trace['station_name'], ";  traces[idx]['sensor_type']:", trace['sensor_type']));
+//          if (idx == 15){
+//            for(cnt = 0; cnt < trace.x.length; cnt++){
+//              console.log( "".concat(trace.x[cnt], "  ", trace.y[cnt]) )
+//            }
+//          }
         }
       }
       /*
@@ -342,9 +362,8 @@
       }
 
       //makeplot_from_csv(); // Plotly.d3.csv( ... ) -> processData_from_csv(...) -> makePlotly( ... )
-
-      processData_from_array(stations, sensors, data, datum_intervall);
       // Plotly.d3.csv( ... )  # fetches data
+      processData_from_array(stations, sensors, data, datum_intervall);
       // processData(...)      # reformats data in appropriate data structure
       // makePlotly( ... )     # makes grph in ELement "plot"
 
