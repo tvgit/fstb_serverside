@@ -160,7 +160,6 @@
       <!-- Plotly chart will be drawn inside this DIV -->
     </div>
     <script>
-
       function makeplot_from_csv() {
         // Plotly.d3.csv("https://raw.githubusercontent.com/plotly/datasets/master/2014_apple_stock.csv", function(data){ processData(data) } );};
         Plotly.d3.csv('http://192.168.2.104/feinstaublog/20170626_test.csv', function(csv_data) {
@@ -169,25 +168,27 @@
       };
 
 
-      function make_trace(x, y, station_name, sensor_type, farbe) {
+      function make_trace(x, y, station_name, sensor_type, color, dash) {
         trace = {
           x,
           y,
           line: {
-            color: farbe,
+            color: color,
             // shape: 'spline',
             shape: 'linear',
+            dash: dash,
             width: 0.5
           },
           mode: 'lines',
           connectgaps: false,
           name: station_name + ': ' + sensor_type
         }
+        console.log(">>  make_trace(): ".concat(trace.line.color, "  ", trace.line.dash));
         return trace
       };
 
 
-      function make_trace_from_csv(data_csv, station_name, sensor_type, farbe) {
+      function make_trace_from_csv(data_csv, station_name, sensor_type, color) {
         var x, y
         x = [], y = []
         for (var i = 0; i < data_csv.length; i++) {
@@ -198,7 +199,7 @@
           }
         }
         // console.log('datum', x, sensor_type, y);
-        return make_trace(x, y, station_name, sensor_type, farbe)
+        return make_trace(x, y, station_name, sensor_type, color)
       };
 
       function processData_from_csv(data) {
@@ -218,19 +219,8 @@
         console.log("stations.length: ".concat(stations.length));
         console.log("sensors.length: ".concat(sensors.length));
 
-        // http://colorsupplyyy.com/app/
-        colors_triad = ["#F0A32F", "#367ABD", "#844D9E" ] ;
-        // https://plot.ly/python/reference/   search for 'dash':
-        // ... or a dash length list in px (eg "5px,10px,2px,2px"). 
-        dash_style = ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"] ;
-      
+        var data_sets = new Array();
         var traces = new Array();
-        var old_station_name = ''
-        // var traces = {};
-        // Für alle Mess stationen
-        //   lege >data_grid< an
-        //   für alle Sensoren:
-
 
         function show_ele(json, index) {
           for (var key in json) {
@@ -246,7 +236,7 @@
         stations.forEach((fE_make_track));
         // https://stackoverflow.com/questions/16507222/create-json-object-dynamically-via-javascript-without-concate-strings
         /*
-        Die traces zusammenstellen:
+        Die data_sets zusammenstellen:
         Name der Mess-Station
         Name des Sensors
         x == array von utime
@@ -269,32 +259,78 @@
                 // console.log("".concat("sensor_type= ", sensor_type, ";  utime=  ", row["unix_time_norm"], ";  val=  ", row[sensor_type]));
               }
             }
-            var trace = {
+            var data_set = {
               station_name: station_name,
-              sensor_type : sensor_type,
+              sensor_type: sensor_type,
               x: x,
               y: y,
             }
-            traces.push(trace);
-//            console.log("".concat("x:  ", trace.x) )
-//            console.log("".concat("y:  ", trace.y) )
+            data_sets.push(data_set);
+            //            console.log("".concat("x:  ", data_set.x) )
+            //            console.log("".concat("y:  ", data_set.y) )
           });
         }
-        
-        
-        console.log(">>  traces.length: ".concat(traces.length));
-        for (var idx = 0; idx < traces.length; idx++) {
-          trace = traces[idx]
-          console.log(">>  idx: ".concat(idx, ";  traces[idx]['station_name']:", trace['station_name'], ";  traces[idx]['sensor_type']:", trace['sensor_type']));
-//          if (idx == 15){
-//            for(cnt = 0; cnt < trace.x.length; cnt++){
-//              console.log( "".concat(trace.x[cnt], "  ", trace.y[cnt]) )
-//            }
-//          }
+
+
+        console.log(">>  data_sets.length: ".concat(data_sets.length));
+        for (var idx = 0; idx < data_sets.length; idx++) {
+          data_set = data_sets[idx]
+          console.log(">>  idx: ".concat(idx, ";  data_sets[idx]['station_name']:", data_set['station_name'], ";  data_sets[idx]['sensor_type']:", data_set['sensor_type']));
+          //          if (idx == 15){
+          //            for(cnt = 0; cnt < data_set.x.length; cnt++){
+          //              console.log( "".concat(data_set.x[cnt], "  ", data_set.y[cnt]) )
+          //            }
+          //          }
         }
+
+
+        // http://colorsupplyyy.com/app/
+        colors_array = ["#F0A32F", "#367ABD", "#844D9E"];
+        // https://plot.ly/python/reference/   search for 'dash':
+        // ... or a dash length list in px (eg "5px,10px,2px,2px"). 
+        dash_array = ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"];
+
+        station_old = -1;
+        sensor_old = -1;
+        color_cnt = -1;
+        dash_cnt = -1;
+
+        for (var idx = 0; idx < data_sets.length; idx++) {
+          data_set = data_sets[idx];
+          x = data_set.x;
+          y = data_set.y;
+
+          station_name = data_set.station_name;
+          sensor_type = data_set.sensor_type;
+
+          if (station_name != station_old) {
+            station_old = station_name;
+            color_cnt++;
+            color_idx = color_cnt % colors_array.length;
+            color = colors_array[color_idx];
+            dash_cnt = 0;
+          }
+
+          if (sensor_type != sensor_old) {
+            sensor_old = sensor_type;
+            dash_cnt++;
+            dash_idx = dash_cnt % dash_array.length;
+            dash = dash_array[dash_idx];
+          }
+
+          new_trace = make_trace(x, y, station_name, sensor_type, color, dash);
+          traces.push(new_trace);
+          //Do something
+        }
+        makePlotly(data);
+
+
+
+
+
       }
       /*
-              // console.log(traces);
+              // console.log(data_sets);
               var layout = {
                 barmode: 'group'
                 };
