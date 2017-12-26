@@ -47,55 +47,54 @@ function make_form_cell(){
 
 echo "<HTML><HEAD></HEAD><BODY>";
 
-    // $db = new SQLite3("feinstaub_0011.db");
-    $db = new SQLite3("feinstaub_0011_NORM.db");
-    // $res = $db->query("select * from fstb");
-    
-    // $res_datum = $db->query("SELECT DISTINCT datum, FROM fstb");
-    // $res = $db->query("SELECT DISTINCT datum, esp8266id FROM fstb ORDER BY datum, esp8266id");
-    // $res = $db->query('SELECT DISTINCT date(datum), station_name FROM "values" ORDER BY datum, station_name');
-    $res = $db->query('SELECT datum, station_name FROM "day_stations" ORDER BY datum, station_name');
+// $db = new SQLite3("feinstaub_0011.db");
+$db = new SQLite3("feinstaub_0011_NORM.db");
+// $res = $db->query("select * from fstb");
 
-    if ($res){
-      // echo '<form action="fstb_show_001.php" method="post">';
-      echo  '<form action="fstb_plot_006.htm" method="post">';
-      echo  '<button type="reset">Eingaben zurücksetzen</button>';
-      echo  '<button type="submit">Eingaben absenden</button>';
-      $_datum_str_old        = "" ;
-      $_station_name_str_old = "" ;
-      echo "<TABLE>";
-      while ($_record = $res -> fetchArray(SQLITE3_ASSOC)){
-        $_datum_str = $_record["datum"];
-        $_station_name_str = $_record["station_name"];
-        
-        if ($_datum_str != ''){
+// $res_datum = $db->query("SELECT DISTINCT datum, FROM fstb");
+// $res = $db->query("SELECT DISTINCT datum, esp8266id FROM fstb ORDER BY datum, esp8266id");
+// $res = $db->query('SELECT DISTINCT date(datum), station_name FROM "values" ORDER BY datum, station_name');
+$res = $db->query('SELECT datum, station_name FROM "day_stations" ORDER BY datum, station_name');
+
+if ($res){
+  // echo '<form action="fstb_show_001.php" method="post">';
+  echo  '<form action="fstb_plot_006.htm" method="post">';
+  echo  '<button type="reset">Eingaben zurücksetzen</button>';
+  echo  '<button type="submit">Eingaben absenden</button>';
+  $_datum_str_old        = "" ;
+  $_station_name_str_old = "" ;
+  echo "<TABLE>";
+  while ($_record = $res -> fetchArray(SQLITE3_ASSOC)){
+    $_datum_str = $_record["datum"];
+    $_station_name_str = $_record["station_name"];
+    if ($_datum_str != ''){
       if ($_datum_str != $_datum_str_old){
         $_datum_str_old = $_datum_str ;
-                echo "<TR>";
-                make_radiobutton_cell($_datum_str, "datum");
-                make_checkbox_cell($_station_name_str, "station_name");
-                echo '&emsp; &emsp;';
-                make_form_cell();
-                make_radiobutton_cell("0",   "Intervall");
-                make_radiobutton_cell("7",   "Intervall");
-                make_radiobutton_cell("31",  "Intervall");
-                make_radiobutton_cell("365", "Intervall");
-                echo "</TR>";
-                }
-            else {
-                echo "<TR>";
-                make_void_cell();
-                make_checkbox_cell($_station_name_str, "station_name");
-                echo "</TR>";
+          echo "<TR>";
+          make_radiobutton_cell($_datum_str, "datum");
+          make_checkbox_cell($_station_name_str, "station_name");
+          // echo '&emsp; &emsp;&emsp; &emsp;&emsp; &emsp;&emsp; &emsp;';
+          make_void_cell(); make_void_cell();  make_void_cell();
+          make_radiobutton_cell("0",   "Intervall");
+          make_radiobutton_cell("7",   "Intervall");
+          make_radiobutton_cell("31",  "Intervall");
+          make_radiobutton_cell("120", "Intervall");
+          make_form_cell();
+          echo "</TR>";
+          }
+        else {
+          echo "<TR>";
+          make_void_cell();
+          make_checkbox_cell($_station_name_str, "station_name");
+          echo "</TR>";
         }
       }
+    }
+  echo "</TABLE>";
+  echo '</form>';
+  }
 
-        }
-      echo "</TABLE>";
-      echo '</form>';
-      }
 
-
-   $db->close();
-   echo "</BODY></HTML>";
+$db->close();
+echo "</BODY></HTML>";
 ?>
